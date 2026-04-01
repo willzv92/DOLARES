@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Tasa Estimada (Lógica condicional requerida)
     if (promedio > 0) {
-      const diferenciaPct = (Math.abs(usdt - bcv) / promedio) * 100;
+      const diferenciaPct = (Math.abs(usdt - bcv) / promedio);
       let estimada;
 
       // Requerimiento c: Si % < 0.5 usa f1, sino f2
