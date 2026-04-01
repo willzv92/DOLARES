@@ -1,21 +1,28 @@
-// 1. Importaciones (Ya configuradas para funcionar en el navegador)
+// 1. IMPORTACIONES (Siempre al inicio)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-    getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc 
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  deleteDoc,
+  doc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 2. PEGA AQUÍ TU CONFIGURACIÓN (La que ves en tu imagen)
+// 2. CONFIGURACIÓN (Pega aquí lo de tu imagen)
 const firebaseConfig = {
-    apiKey: "AIzaSyCrEYcnNbWLgVShx6v5GmeU3eddCGTQ1xU",
-    authDomain: "dolares-aa1fa.firebaseapp.com",
-    projectId: "dolares-aa1fa",
-    storageBucket: "dolares-aa1fa.firebasestorage.app",
-    messagingSenderId: "383367321854",
-    appId: "1:383367321854:web:924a893f685f21b6feadaf",
-    measurementId: "G-L8CPLQSREN"
+  apiKey: "AIzaSyCR...",
+  authDomain: "dolares-aa1fa.firebaseapp.com",
+  projectId: "dolares-aa1fa",
+  storageBucket: "dolares-aa1fa.firebasestorage.app",
+  messagingSenderId: "383367321854",
+  appId: "1:383367321854:web:924a893f685f21b6feadaf",
+  measurementId: "G-L8CPLQSREN",
 };
 
-// 3. Inicializar Firebase
+// 3. INICIALIZACIÓN
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const registrosRef = collection(db, "registros");
@@ -105,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Tasa Estimada (Lógica condicional requerida)
     if (promedio > 0) {
-      const diferenciaPct = (Math.abs(usdt - bcv) / promedio);
+      const diferenciaPct = Math.abs(usdt - bcv) / promedio;
       let estimada;
 
       // Requerimiento c: Si % < 0.5 usa f1, sino f2
@@ -270,6 +277,24 @@ function renderTabla() {
     listaRegistros.appendChild(tr);
   });
 }
+
+// --- AQUÍ VA LA ESCUCHA EN TIEMPO REAL DE FIREBASE ---
+const q = query(registrosRef, orderBy("timestamp", "desc"));
+onSnapshot(q, (snapshot) => {
+  const listaRegistros = document.getElementById("lista-registros");
+  listaRegistros.innerHTML = "";
+  snapshot.forEach((docSnap) => {
+    const reg = docSnap.data();
+    const id = docSnap.id;
+    // (Aquí va el código que crea las filas <tr> de la tabla que te pasé antes)
+    renderFilaTabla(reg, id, listaRegistros);
+  });
+});
+
+// --- BOTÓN REGISTRAR (Guardar en Firebase) ---
+document.getElementById("btn-registrar").addEventListener("click", async () => {
+  // (Aquí va la lógica de addDoc que te pasé antes)
+});
 
 // Nueva función para borrar uno a uno
 function eliminarRegistro(index) {
