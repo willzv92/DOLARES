@@ -10,10 +10,6 @@
     <div class="app-container">
       <header>
         <h1>Calculadora de Divisas</h1>
-        <div class="api-status">
-          <span id="load-status">Esperando conexión...</span>
-          <button id="btn-sync" title="Sincronizar Tasas">🔄</button>
-        </div>
       </header>
 
       <section class="input-grid">
@@ -83,10 +79,9 @@
       <hr class="separator" />
 
       <section class="gain-section">
-        <h3>Cálculo de Ganancia USDt</h3>
         <div class="input-grid">
           <div class="field">
-            <label>Tasa Zelle / USDt</label>
+            <label>Tasa $ / USDt</label>
             <input
               type="number"
               id="tasaZelle"
@@ -104,7 +99,7 @@
             />
           </div>
           <div class="field">
-            <label>Comisión USDt (Fija)</label>
+            <label>Comisión USDt</label>
             <input
               type="number"
               id="comisionUsdt"

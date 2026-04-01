@@ -1,185 +1,94 @@
-// 1. IMPORTACIONES (Siempre al inicio)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  deleteDoc,
-  doc,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// 2. CONFIGURACIÓN (Pega aquí lo de tu imagen)
-const firebaseConfig = {
-  apiKey: "AIzaSyCR...",
-  authDomain: "dolares-aa1fa.firebaseapp.com",
-  projectId: "dolares-aa1fa",
-  storageBucket: "dolares-aa1fa.firebasestorage.app",
-  messagingSenderId: "383367321854",
-  appId: "1:383367321854:web:924a893f685f21b6feadaf",
-  measurementId: "G-L8CPLQSREN",
-};
-
-// 3. INICIALIZACIÓN
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const registrosRef = collection(db, "registros");
-
-// ... (Aquí sigue el resto del código que te pasé antes con los botones y las tablas)
-
 document.addEventListener("DOMContentLoaded", () => {
-  const fields = {
-    tasaBCV: document.getElementById("tasaBCV"),
-    tasaUSDt: document.getElementById("tasaUSDt"),
-    montoUSD: document.getElementById("montoUSD"),
-    comisionPct: document.getElementById("comisionPct"),
-    f1: document.getElementById("f1"),
-    f2: document.getElementById("f2"),
-    tasaPromedio: document.getElementById("tasaPromedio"),
-    tasaEstimada: document.getElementById("tasaEstimada"),
-    tasaMayor50: document.getElementById("tasaMayor50"),
-    tasaMenor50: document.getElementById("tasaMenor50"),
-  };
+  // Selección de inputs
+  const inputs = [
+    "tasaBCV",
+    "tasaUSDt",
+    "montoUSD",
+    "comisionPct",
+    "f1",
+    "f2",
+    "tasaMayor50",
+  ];
+  const fields = {};
+  inputs.forEach((id) => (fields[id] = document.getElementById(id)));
 
-  const statusText = document.getElementById("load-status");
-  const btnCalcular = document.getElementById("btn-calcular");
-  const btnSync = document.getElementById("btn-sync");
+  const tasaPromedioDisp = document.getElementById("tasaPromedio");
+  const tasaEstimadaDisp = document.getElementById("tasaEstimada");
+  const tasaMenor50Disp = document.getElementById("tasaMenor50");
+  const btnCalcular = document.getElementById("btnCalcular");
 
-  // --- NUEVA FUNCIÓN DE SINCRONIZACIÓN (Más estable) ---
-  async function fetchTasas() {
-    statusText.innerText = "Sincronizando tasas...";
-
-    // Intentaremos con dos fuentes diferentes por si una falla
-    const fuentes = [
-      "https://pydolarve.org/api/v1/dollar?page=enparalelovzla",
-      "https://criptodolar.net/api/v1/quotes/usd/veb",
-    ];
-
-    let exito = false;
-
-    for (let url of fuentes) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Error en respuesta");
-        const data = await response.json();
-
-        // Lógica para pydolarve (Fuente 1)
-        if (data.monitors) {
-          fields.tasaBCV.value = data.monitors.bcv?.price || 0;
-          fields.tasaUSDt.value = data.monitors.enparalelovzla?.price || 0;
-        }
-        // Lógica para CriptoDolar (Fuente 2)
-        else if (Array.isArray(data)) {
-          const bcv = data.find((m) => m.monitor.includes("BCV"));
-          const paralelo = data.find((m) =>
-            m.monitor.includes("EnParaleloVzla"),
-          );
-          if (bcv) fields.tasaBCV.value = bcv.price;
-          if (paralelo) fields.tasaUSDt.value = paralelo.price;
-        }
-
-        statusText.innerText =
-          "Sincronizado: " + new Date().toLocaleTimeString();
-        exito = true;
-        calculateAutoFields();
-        break; // Si tuvo éxito, salimos del bucle
-      } catch (e) {
-        console.warn(`Fallo en fuente ${url}:`, e);
-      }
-    }
-
-    if (!exito) {
-      statusText.innerText = "Error de conexión. Ingrese tasas manualmente.";
-      // Valores por defecto si falla todo para que no quede vacío
-      if (!fields.tasaBCV.value) fields.tasaBCV.value = "";
-      if (!fields.tasaUSDt.value) fields.tasaUSDt.value = "";
-    }
-  }
-
-  // --- LÓGICA DE CÁLCULOS (Tu requerimiento original) ---
-  function calculateAutoFields() {
+  // Función para actualizar cálculos automáticos mientras se escribe
+  const updateAutomatedFields = () => {
     const bcv = parseFloat(fields.tasaBCV.value) || 0;
     const usdt = parseFloat(fields.tasaUSDt.value) || 0;
     const f1 = parseFloat(fields.f1.value) || 0;
     const f2 = parseFloat(fields.f2.value) || 0;
     const mayor50 = parseFloat(fields.tasaMayor50.value) || 0;
 
-    // Tasa Promedio: (BCV + USDt) / 2
+    // 1. Tasa Promedio
     const promedio = (bcv + usdt) / 2;
-    fields.tasaPromedio.value = promedio > 0 ? promedio.toFixed(4) : "";
+    tasaPromedioDisp.value = promedio.toFixed(4);
 
-    // Tasa Estimada (Lógica condicional requerida)
+    // 2. Tasa Estimada
     if (promedio > 0) {
-      const diferenciaPct = Math.abs(usdt - bcv) / promedio;
-      let estimada;
+      const diferenciaPct = (Math.abs(usdt - bcv) / promedio) * 100;
+      let estimada = 0;
 
-      // Requerimiento c: Si % < 0.5 usa f1, sino f2
       if (diferenciaPct < 0.5) {
         estimada = promedio + (usdt - promedio) * f1;
       } else {
         estimada = promedio + (usdt - promedio) * f2;
       }
-      fields.tasaEstimada.value = estimada.toFixed(4);
+      tasaEstimadaDisp.value = estimada.toFixed(4);
     }
 
-    // Tasa < 50$ (Requerimiento d: Tasa >= 50$ - 15)
+    // 3. Tasa < 50$
     if (mayor50 > 0) {
-      fields.tasaMenor50.value = (mayor50 - 15).toFixed(2);
+      tasaMenor50Disp.value = (mayor50 - 15).toFixed(2);
     } else {
-      fields.tasaMenor50.value = "";
+      tasaMenor50Disp.value = "";
     }
-  }
+  };
 
-  // --- CÁLCULO AL PRESIONAR BOTÓN ---
+  // Escuchar cambios en los inputs para actualizar automáticos
+  inputs.forEach((id) => {
+    fields[id].addEventListener("input", updateAutomatedFields);
+  });
+
+  // Lógica del botón Calcular
   btnCalcular.addEventListener("click", () => {
     const montoUSD = parseFloat(fields.montoUSD.value) || 0;
     const comisionPct = parseFloat(fields.comisionPct.value) || 0;
     const mayor50 = parseFloat(fields.tasaMayor50.value) || 0;
-    const menor50 = parseFloat(fields.tasaMenor50.value) || 0;
+    const menor50 = parseFloat(tasaMenor50Disp.value) || 0;
 
     if (montoUSD <= 0 || mayor50 <= 0) {
-      alert("⚠️ Por favor ingresa el Monto $ y la Tasa >= 50$");
+      alert("Por favor, ingrese el Monto $ y la Tasa >= 50$");
       return;
     }
 
-    // Requerimiento e: Selección de Tasa según monto
-    const tasaAplicada = montoUSD >= 50 ? mayor50 : menor50;
+    // Determinar Tasa a usar
+    const tasaFinal = montoUSD >= 50 ? mayor50 : menor50;
 
-    // Requerimiento f: Cálculo de registro
-    const montoBs = montoUSD * tasaAplicada;
-    const comisionBancaria = montoBs * (comisionPct / 100);
-    const montoTotalBs = montoBs + comisionBancaria;
+    // Cálculos finales
+    const montoBs = montoUSD * tasaFinal;
+    const comisionBs = montoBs * (comisionPct / 100);
+    const totalBs = montoBs + comisionBs;
 
-    // Formateo y Salida
-    document.getElementById("outMontoBs").innerText = montoBs.toLocaleString(
+    // Mostrar resultados
+    document.getElementById("resMontoBs").innerText = montoBs.toLocaleString(
       "es-VE",
       { minimumFractionDigits: 2 },
     );
-    document.getElementById("outComisionBs").innerText =
-      comisionBancaria.toLocaleString("es-VE", { minimumFractionDigits: 2 });
-    document.getElementById("outTotalBs").innerText =
-      montoTotalBs.toLocaleString("es-VE", { minimumFractionDigits: 2 });
+    document.getElementById("resComisionBs").innerText =
+      comisionBs.toLocaleString("es-VE", { minimumFractionDigits: 2 });
+    document.getElementById("resTotalBs").innerText = totalBs.toLocaleString(
+      "es-VE",
+      { minimumFractionDigits: 2 },
+    );
 
-    document.getElementById("result-card").style.display = "block";
+    document.getElementById("resultado").style.display = "block";
   });
-
-  // Escuchadores de eventos
-  [
-    fields.tasaBCV,
-    fields.tasaUSDt,
-    fields.f1,
-    fields.f2,
-    fields.tasaMayor50,
-  ].forEach((el) => {
-    el.addEventListener("input", calculateAutoFields);
-  });
-
-  btnSync.addEventListener("click", fetchTasas);
-
-  // Iniciar al cargar
-  fetchTasas();
 });
 
 // --- LÓGICA DE REGISTROS Y GANANCIA ---
@@ -215,7 +124,7 @@ btnRegistrar.addEventListener("click", () => {
   const tasaUsada = montoUSD >= 50 ? tasaMayor50 : tasaMenor50;
   const montoTotalBs = montoUSD * tasaUsada; // Simplificado para el registro
 
-  const montoUSDt = montoUSD / tasaZelle;
+  const montoUSDt = montoUSD * tasaZelle;
   const cambioUSDt = montoTotalBs / tasaBsUsdt;
   const gananciaUSDt = montoUSDt - cambioUSDt - comisionUsdt;
   const gananciaPct = montoUSDt !== 0 ? (gananciaUSDt / montoUSDt) * 100 : 0;
@@ -278,24 +187,6 @@ function renderTabla() {
   });
 }
 
-// --- AQUÍ VA LA ESCUCHA EN TIEMPO REAL DE FIREBASE ---
-const q = query(registrosRef, orderBy("timestamp", "desc"));
-onSnapshot(q, (snapshot) => {
-  const listaRegistros = document.getElementById("lista-registros");
-  listaRegistros.innerHTML = "";
-  snapshot.forEach((docSnap) => {
-    const reg = docSnap.data();
-    const id = docSnap.id;
-    // (Aquí va el código que crea las filas <tr> de la tabla que te pasé antes)
-    renderFilaTabla(reg, id, listaRegistros);
-  });
-});
-
-// --- BOTÓN REGISTRAR (Guardar en Firebase) ---
-document.getElementById("btn-registrar").addEventListener("click", async () => {
-  // (Aquí va la lógica de addDoc que te pasé antes)
-});
-
 // Nueva función para borrar uno a uno
 function eliminarRegistro(index) {
   if (confirm("¿Deseas eliminar este registro?")) {
@@ -313,5 +204,3 @@ function eliminarRegistro(index) {
     renderTabla();
   }
 }
-// Nota: Asegúrate de llamar a renderTabla() dentro de tu lógica
-// después de guardar un nuevo registro.
