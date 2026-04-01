@@ -21,7 +21,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: 10px; /* Reducido para móviles */
 }
 
 .app-container {
@@ -32,6 +32,7 @@ body {
   border-radius: 15px;
   border: 1px solid var(--dorado);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  margin: 10px auto;
 }
 
 header {
@@ -44,25 +45,6 @@ h1 {
   font-size: 1.5rem;
   text-transform: uppercase;
   letter-spacing: 2px;
-}
-
-.api-status {
-  font-size: 0.75rem;
-  color: #8892b0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 5px;
-}
-
-#btn-sync {
-  background: none;
-  border: 1px solid var(--dorado);
-  color: var(--dorado);
-  border-radius: 50%;
-  cursor: pointer;
-  padding: 2px 5px;
 }
 
 /* Requerimiento: Sin flechas en los inputs */
@@ -169,50 +151,38 @@ input:focus {
   font-size: 1.1rem;
 }
 
-.table-wrapper {
-  overflow-x: auto;
-  margin-top: 15px;
-  border: 1px solid var(--dorado);
-  border-radius: 8px;
-}
+/* --- MEJORAS PARA MÓVILES (RESPONSIVE) --- */
 
-/* Contenedor con Scroll para 5 registros aproximadamente */
 .table-container {
-  max-height: 280px; /* Altura ajustada para visualizar ~5 filas */
+  max-height: 350px;
   overflow-y: auto;
+  overflow-x: auto; /* Permite scroll horizontal en móviles */
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--dorado);
   border-radius: 8px;
   margin-top: 10px;
   background: var(--azul-oscuro);
 }
 
-/* Personalización de la barra de desplazamiento (Scrollbar) */
+/* Scrollbar personalizado */
 .table-container::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
-
-.table-container::-webkit-scrollbar-track {
-  background: var(--azul-claro);
-}
-
 .table-container::-webkit-scrollbar-thumb {
   background: var(--dorado);
   border-radius: 10px;
-}
-
-.table-container::-webkit-scrollbar-thumb:hover {
-  background: var(--dorado-brillante);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.75rem;
-  table-layout: auto;
+  min-width: 600px; /* Evita que la tabla se colapse en pantallas pequeñas */
 }
 
 th {
-  position: sticky; /* Mantiene el encabezado visible al hacer scroll */
+  position: sticky;
   top: 0;
   background: var(--dorado);
   color: var(--azul-oscuro);
@@ -226,39 +196,46 @@ td {
   text-align: center;
 }
 
-tr:hover {
-  background: rgba(197, 160, 89, 0.1);
-}
-
-.btn-clear {
-  background: none;
-  border: 1px solid #ff4d4d;
-  color: #ff4d4d;
-  font-size: 0.7rem;
-  margin-top: 10px;
-  cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 4px;
-}
-
 .btn-del {
-    background: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.7rem;
-    transition: 0.2s;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px; /* Tamaño optimizado para touch */
+  cursor: pointer;
+  font-weight: bold;
 }
 
-.btn-del:hover {
-    background: #c0392b;
-    transform: scale(1.1);
-}
+/* Media Query para teléfonos inteligentes */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 1.2rem;
+    margin: 5px;
+  }
 
-/* Ajuste para que la columna de acción no sea muy ancha */
-td:last-child {
-    width: 50px;
+  h1 {
+    font-size: 1.2rem;
+  }
+
+  .input-grid {
+    grid-template-columns: 1fr; /* Una sola columna en móvil */
+    gap: 12px;
+  }
+
+  .separator {
+    grid-column: 1;
+  }
+
+  input {
+    font-size: 16px; /* Previene el auto-zoom en iOS */
+    padding: 12px;
+  }
+
+  .main-button {
+    padding: 18px; /* Botón más grande para dedos */
+  }
+
+  .res-row {
+    font-size: 0.85rem;
+  }
 }
