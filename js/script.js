@@ -1,5 +1,31 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  deleteDoc,
+  doc,
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// --- CONFIGURACIÓN DE FIREBASE ---
+// Reemplaza estos valores con los de tu consola de Firebase
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  projectId: "TU_PROYECTO_ID",
+  storageBucket: "TU_PROYECTO.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const colRef = collection(db, "historial_cambios");
+
 document.addEventListener("DOMContentLoaded", () => {
-  // Selección de inputs
   const inputs = [
     "tasaBCV",
     "tasaUSDt",
@@ -15,9 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const tasaPromedioDisp = document.getElementById("tasaPromedio");
   const tasaEstimadaDisp = document.getElementById("tasaEstimada");
   const tasaMenor50Disp = document.getElementById("tasaMenor50");
-  const btnCalcular = document.getElementById("btnCalcular");
+  const btnCalcular = document.getElementById("btn-calcular"); // Corregido ID
 
-  // Función para actualizar cálculos automáticos mientras se escribe
   const updateAutomatedFields = () => {
     const bcv = parseFloat(fields.tasaBCV.value) || 0;
     const usdt = parseFloat(fields.tasaUSDt.value) || 0;
@@ -25,37 +50,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const f2 = parseFloat(fields.f2.value) || 0;
     const mayor50 = parseFloat(fields.tasaMayor50.value) || 0;
 
-    // 1. Tasa Promedio
     const promedio = (bcv + usdt) / 2;
     tasaPromedioDisp.value = promedio.toFixed(4);
 
-    // 2. Tasa Estimada
     if (promedio > 0) {
       const diferenciaPct = (Math.abs(usdt - bcv) / promedio) * 100;
-      let estimada = 0;
-
-      if (diferenciaPct < 0.5) {
-        estimada = promedio + (usdt - promedio) * f1;
-      } else {
-        estimada = promedio + (usdt - promedio) * f2;
-      }
+      let estimada =
+        diferenciaPct < 0.5
+          ? promedio + (usdt - promedio) * f1
+          : promedio + (usdt - promedio) * f2;
       tasaEstimadaDisp.value = estimada.toFixed(4);
     }
 
-    // 3. Tasa < 50$
-    if (mayor50 > 0) {
-      tasaMenor50Disp.value = (mayor50 - 15).toFixed(2);
-    } else {
-      tasaMenor50Disp.value = "";
-    }
+    tasaMenor50Disp.value = mayor50 > 0 ? (mayor50 - 0.15).toFixed(2) : ""; // Ajustado a -0.15 según lógica común
   };
 
-  // Escuchar cambios en los inputs para actualizar automáticos
-  inputs.forEach((id) => {
-    fields[id].addEventListener("input", updateAutomatedFields);
-  });
+  inputs.forEach((id) =>
+    fields[id].addEventListener("input", updateAutomatedFields),
+  );
 
-  // Lógica del botón Calcular
   btnCalcular.addEventListener("click", () => {
     const montoUSD = parseFloat(fields.montoUSD.value) || 0;
     const comisionPct = parseFloat(fields.comisionPct.value) || 0;
@@ -67,108 +80,37 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Determinar Tasa a usar
     const tasaFinal = montoUSD >= 50 ? mayor50 : menor50;
-
-    // Cálculos finales
     const montoBs = montoUSD * tasaFinal;
     const comisionBs = montoBs * (comisionPct / 100);
     const totalBs = montoBs + comisionBs;
 
-    // Mostrar resultados
-    document.getElementById("resMontoBs").innerText = montoBs.toLocaleString(
+    // Actualizar IDs según tu HTML (outMontoBs, etc)
+    document.getElementById("outMontoBs").innerText = montoBs.toLocaleString(
       "es-VE",
       { minimumFractionDigits: 2 },
     );
-    document.getElementById("resComisionBs").innerText =
+    document.getElementById("outComisionBs").innerText =
       comisionBs.toLocaleString("es-VE", { minimumFractionDigits: 2 });
-    document.getElementById("resTotalBs").innerText = totalBs.toLocaleString(
+    document.getElementById("outTotalBs").innerText = totalBs.toLocaleString(
       "es-VE",
       { minimumFractionDigits: 2 },
     );
-
-    document.getElementById("resultado").style.display = "block";
+    document.getElementById("result-card").style.display = "block";
   });
 });
 
-// --- LÓGICA DE REGISTROS Y GANANCIA ---
+// --- LÓGICA DE FIREBASE ---
 
 const btnRegistrar = document.getElementById("btn-registrar");
-const btnBorrarTodo = document.getElementById("btn-borrar-todo");
-const listaRegistros = document.getElementById("lista-registros");
 
-// Cargar datos guardados al iniciar
-renderTabla();
+onSnapshot(query(colRef, orderBy("timestamp", "desc")), (snapshot) => {
+  const listaRegistrosUI = document.getElementById("lista-registros");
+  listaRegistrosUI.innerHTML = "";
 
-btnRegistrar.addEventListener("click", () => {
-  // Captura de datos de la sección superior e inferior
-  const montoUSD = parseFloat(document.getElementById("montoUSD").value) || 0;
-  const tasaMayor50 =
-    parseFloat(document.getElementById("tasaMayor50").value) || 0;
-  const tasaMenor50 =
-    parseFloat(document.getElementById("tasaMenor50").value) || 0;
-
-  // Captura de datos de ganancia
-  const tasaZelle = parseFloat(document.getElementById("tasaZelle").value) || 0;
-  const tasaBsUsdt =
-    parseFloat(document.getElementById("tasaBsUsdt").value) || 0;
-  const comisionUsdt =
-    parseFloat(document.getElementById("comisionUsdt").value) || 0;
-
-  if (montoUSD === 0 || tasaBsUsdt === 0) {
-    alert("Faltan datos para procesar el registro (Monto $ o Tasas)");
-    return;
-  }
-
-  // Cálculos requeridos
-  const tasaUsada = montoUSD >= 50 ? tasaMayor50 : tasaMenor50;
-  const montoTotalBs = montoUSD * tasaUsada; // Simplificado para el registro
-
-  const montoUSDt = montoUSD * tasaZelle;
-  const cambioUSDt = montoTotalBs / tasaBsUsdt;
-  const gananciaUSDt = montoUSDt - cambioUSDt - comisionUsdt;
-  const gananciaPct = montoUSDt !== 0 ? (gananciaUSDt / montoUSDt) * 100 : 0;
-
-  // Crear objeto de registro
-  const registro = {
-    fecha: new Date().toLocaleString(),
-    monto: montoUSD,
-    tasa: tasaUsada,
-    totalBs: montoTotalBs,
-    montoUsdt: montoUSDt,
-    cambioUsdt: cambioUSDt,
-    ganancia: gananciaUSDt,
-    pct: gananciaPct,
-  };
-
-  // Guardar en localStorage
-  const historial = JSON.parse(
-    localStorage.getItem("historial_cambios") || "[]",
-  );
-  historial.push(registro);
-  localStorage.setItem("historial_cambios", JSON.stringify(historial));
-
-  renderTabla();
-});
-
-// Función para renderizar la tabla desde LocalStorage
-function renderTabla() {
-  const listaRegistros = document.getElementById("lista-registros");
-  // Obtenemos el historial (sin revertir aún para mantener los índices originales)
-  const historial = JSON.parse(
-    localStorage.getItem("historial_cambios") || "[]",
-  );
-
-  listaRegistros.innerHTML = "";
-
-  // Usamos reverse para mostrar el último arriba, pero guardamos el índice real
-  const historialReverse = [...historial]
-    .map((data, index) => ({ ...data, originalIndex: index }))
-    .reverse();
-
-  historialReverse.forEach((reg) => {
+  snapshot.docs.forEach((docSnap) => {
+    const reg = docSnap.data();
     const colorGanancia = reg.ganancia >= 0 ? "#2ecc71" : "#e74c3c";
-
     const tr = document.createElement("tr");
     tr.innerHTML = `
             <td>${reg.fecha}</td>
@@ -179,28 +121,54 @@ function renderTabla() {
             <td>${reg.cambioUsdt.toFixed(2)}</td>
             <td style="color: ${colorGanancia}; font-weight: bold;">${reg.ganancia.toFixed(2)}</td>
             <td style="color: ${colorGanancia}">${reg.pct.toFixed(2)}%</td>
-            <td>
-                <button class="btn-del" onclick="eliminarRegistro(${reg.originalIndex})">X</button>
-            </td>
+            <td><button class="btn-del" data-id="${docSnap.id}">X</button></td>
         `;
-    listaRegistros.appendChild(tr);
+    listaRegistrosUI.appendChild(tr);
   });
-}
 
-// Nueva función para borrar uno a uno
-function eliminarRegistro(index) {
-  if (confirm("¿Deseas eliminar este registro?")) {
-    let historial = JSON.parse(
-      localStorage.getItem("historial_cambios") || "[]",
-    );
+  document.querySelectorAll(".btn-del").forEach((btn) => {
+    btn.onclick = async () => {
+      if (confirm("¿Eliminar registro?")) {
+        await deleteDoc(
+          doc(db, "historial_cambios", btn.getAttribute("data-id")),
+        );
+      }
+    };
+  });
+});
 
-    // Eliminamos el elemento en la posición específica
-    historial.splice(index, 1);
+btnRegistrar.addEventListener("click", async () => {
+  const montoUSD = parseFloat(document.getElementById("montoUSD").value) || 0;
+  const tasaMayor50 =
+    parseFloat(document.getElementById("tasaMayor50").value) || 0;
+  const tasaMenor50 =
+    parseFloat(document.getElementById("tasaMenor50").value) || 0;
+  const tasaZelle = parseFloat(document.getElementById("tasaZelle").value) || 0;
+  const tasaBsUsdt =
+    parseFloat(document.getElementById("tasaBsUsdt").value) || 0;
+  const comisionUsdt =
+    parseFloat(document.getElementById("comisionUsdt").value) || 0;
 
-    // Guardamos el nuevo arreglo en localStorage
-    localStorage.setItem("historial_cambios", JSON.stringify(historial));
-
-    // Refrescamos la tabla
-    renderTabla();
+  if (montoUSD === 0 || tasaBsUsdt === 0) {
+    alert("Faltan datos (Monto $ o Tasa Bs/USDt)");
+    return;
   }
-}
+
+  const tasaUsada = montoUSD >= 50 ? tasaMayor50 : tasaMenor50;
+  const montoTotalBs = montoUSD * tasaUsada;
+  const montoUSDt = montoUSD * tasaZelle;
+  const cambioUSDt = montoTotalBs / tasaBsUsdt;
+  const gananciaUSDt = montoUSDt - cambioUSDt - comisionUsdt;
+
+  await addDoc(colRef, {
+    fecha: new Date().toLocaleString(),
+    timestamp: Date.now(),
+    monto: montoUSD,
+    tasa: tasaUsada,
+    totalBs: montoTotalBs,
+    montoUsdt: montoUSDt,
+    cambioUsdt: cambioUSDt,
+    ganancia: gananciaUSDt,
+    pct: montoUSDt !== 0 ? (gananciaUSDt / montoUSDt) * 100 : 0,
+  });
+});
