@@ -71,7 +71,12 @@ document.addEventListener("DOMContentLoaded", () => {
       tasaEstimadaDisp.value = estimada.toFixed(4);
     }
 
-    tasaMenor50Disp.value = mayor50 > 0 ? (mayor50 - 15).toFixed(2) : "";
+    if (mayor50 > 0) {
+      const calculoMenor = mayor50 - 15;
+      tasaMenor50Disp.value = calculoMenor.toFixed(2);
+    } else {
+      tasaMenor50Disp.value = "";
+    }
   };
 
   // Listeners de entrada únicos
