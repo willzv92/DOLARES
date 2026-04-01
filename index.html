@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora de Divisas</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header>
+        <h1>Calculadora de Divisas</h1>
+        <div class="api-status">
+          <span id="load-status">Esperando conexión...</span>
+          <button id="btn-sync" title="Sincronizar Tasas">🔄</button>
+        </div>
+      </header>
+
+      <section class="input-grid">
+        <div class="field">
+          <label>Tasa BCV</label>
+          <input type="number" id="tasaBCV" placeholder="0.00" />
+        </div>
+        <div class="field">
+          <label>Tasa USDt</label>
+          <input type="number" id="tasaUSDt" placeholder="0.00" />
+        </div>
+        <div class="field">
+          <label>Monto $</label>
+          <input type="number" id="montoUSD" placeholder="Ej: 100" />
+        </div>
+        <div class="field">
+          <label>Comisión %</label>
+          <input type="number" id="comisionPct" placeholder="0.00" />
+        </div>
+        <div class="field">
+          <label>Factor f1</label>
+          <input type="number" id="f1" value="0.10" />
+        </div>
+        <div class="field">
+          <label>Factor f2</label>
+          <input type="number" id="f2" value="0.20" />
+        </div>
+
+        <div class="field auto">
+          <label>Tasa Promedio</label>
+          <input type="number" id="tasaPromedio" readonly tabindex="-1" />
+        </div>
+        <div class="field auto">
+          <label>Tasa Estimada</label>
+          <input type="number" id="tasaEstimada" readonly tabindex="-1" />
+        </div>
+
+        <hr class="separator" />
+
+        <div class="field manual-tasa">
+          <label>Tasa >= 50$</label>
+          <input type="number" id="tasaMayor50" placeholder="Ej: 45.50" />
+        </div>
+        <div class="field auto">
+          <label>Tasa < 50$</label>
+          <input type="number" id="tasaMenor50" readonly tabindex="-1" />
+        </div>
+      </section>
+
+      <button id="btn-calcular" class="main-button">CALCULAR REGISTRO</button>
+
+      <div id="result-card" class="result-card" style="display: none">
+        <h3>Resumen de Registro</h3>
+        <div class="res-row">
+          <span>Monto Bs:</span>
+          <strong id="outMontoBs">0.00</strong>
+        </div>
+        <div class="res-row">
+          <span>Comisión Bancaria:</span>
+          <strong id="outComisionBs">0.00</strong>
+        </div>
+        <div class="res-row total">
+          <span>Monto Total Bs:</span>
+          <strong id="outTotalBs">0.00</strong>
+        </div>
+      </div>
+      <hr class="separator" />
+
+      <section class="gain-section">
+        <h3>Cálculo de Ganancia USDt</h3>
+        <div class="input-grid">
+          <div class="field">
+            <label>Tasa Zelle / USDt</label>
+            <input
+              type="number"
+              id="tasaZelle"
+              step="0.001"
+              placeholder="Ej: 1.05"
+            />
+          </div>
+          <div class="field">
+            <label>Tasa Bs / USDt</label>
+            <input
+              type="number"
+              id="tasaBsUsdt"
+              step="0.01"
+              placeholder="Ej: 40.50"
+            />
+          </div>
+          <div class="field">
+            <label>Comisión USDt (Fija)</label>
+            <input
+              type="number"
+              id="comisionUsdt"
+              step="0.01"
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+        <button
+          id="btn-registrar"
+          class="main-button"
+          style="background: #27ae60; color: white"
+        >
+          CREAR REGISTRO PERMANENTE
+        </button>
+      </section>
+
+      <section class="history-section">
+        <h3>Últimos Registros</h3>
+        <div class="table-container">
+          <table id="tabla-registros">
+            <thead>
+              <tr>
+                <th>Fecha / Hora</th>
+                <th>Monto $</th>
+                <th>Tasa</th>
+                <th>Total Bs</th>
+                <th>Monto USDt</th>
+                <th>Cambio USDt</th>
+                <th>Ganancia</th>
+                <th>%</th>
+                <th>Acción</th> </tr>
+              </tr>
+            </thead>
+            <tbody id="lista-registros"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>
