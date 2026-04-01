@@ -1,4 +1,4 @@
-// Importamos las funciones necesarias de la versión 12.11.0 (tu CDN)
+// Importamos las funciones necesarias de la versión 12.11.0
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
   getFirestore,
@@ -11,7 +11,6 @@ import {
   doc,
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// --- CONFIGURACIÓN DE FIREBASE (Tus credenciales proporcionadas) ---
 const firebaseConfig = {
   apiKey: "AIzaSyCrEYcnNbWLgVShx6v5GmeU3eddCGTQ1xU",
   authDomain: "dolares-aa1fa.firebaseapp.com",
@@ -26,7 +25,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const colRef = collection(db, "historial_cambios");
 
-let chartInstance = null; // Para destruir y recrear el gráfico sin errores
+let chartInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   const inputs = [
@@ -44,8 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const tasaPromedioDisp = document.getElementById("tasaPromedio");
   const tasaEstimadaDisp = document.getElementById("tasaEstimada");
   const tasaMenor50Disp = document.getElementById("tasaMenor50");
-  const btnCalcular = document.getElementById("btn-calcular"); // Corregido ID
-  const brechaDisp = document.getElementById("brechaReal"); // Nuevo campo para brecha
+  const brechaDisp = document.getElementById("brechaReal");
+  const btnCalcular = document.getElementById("btn-calcular");
 
   const updateAutomatedFields = () => {
     const bcv = parseFloat(fields.tasaBCV.value) || 0;
@@ -54,21 +53,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const f2 = parseFloat(fields.f2.value) || 0;
     const mayor50 = parseFloat(fields.tasaMayor50.value) || 0;
 
+    // Cálculo de Brecha (se actualiza mientras escribes)
+    if (bcv > 0) {
+      const brechaVal = (Math.abs(usdt - bcv) / bcv) * 100;
+      brechaDisp.value = brechaVal.toFixed(2) + "%";
+    }
+
     const promedio = (bcv + usdt) / 2;
     tasaPromedioDisp.value = promedio.toFixed(4);
 
     if (promedio > 0) {
-      const diferenciaPct = Math.abs(usdt - bcv) / bcv;
+      const diferenciaPct = (Math.abs(usdt - bcv) / bcv) * 100;
       let estimada =
-        diferenciaPct < 0.5
+        diferenciaPct < 50
           ? promedio + (usdt - promedio) * f1
           : promedio + (usdt - promedio) * f2;
       tasaEstimadaDisp.value = estimada.toFixed(4);
     }
 
-    tasaMenor50Disp.value = mayor50 > 0 ? (mayor50 - 15).toFixed(2) : ""; // Ajustado a -0.15 según lógica común
+    tasaMenor50Disp.value = mayor50 > 0 ? (mayor50 - 0.15).toFixed(2) : "";
   };
 
+  // Listeners de entrada únicos
   inputs.forEach((id) =>
     fields[id].addEventListener("input", updateAutomatedFields),
   );
@@ -84,28 +90,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // CÁLCULO DE BRECHA
-    if (bcv > 0) {
-      const brechaVal = (Math.abs(usdt - bcv) / bcv) * 100;
-      brechaDisp.value = brechaVal.toFixed(2) + "%";
-    } else {
-      brechaDisp.value = "0.00%";
-    }
-
     const tasaFinal = montoUSD >= 50 ? mayor50 : menor50;
     const montoBs = montoUSD * tasaFinal;
     const comisionBs = montoBs * (comisionPct / 100);
     const totalBs = montoBs + comisionBs;
 
-    // Actualizar IDs según tu HTML (outMontoBs, etc)
-    // Añadir escucha de brecha a los inputs bcv y usdt
-    document
-      .getElementById("tasaBCV")
-      .addEventListener("input", updateAutomatedFields);
-    document
-      .getElementById("tasaUSDt")
-      .addEventListener("input", updateAutomatedFields);
-    // Mostrar resultados formateados
     document.getElementById("outMontoBs").innerText = montoBs.toLocaleString(
       "es-VE",
       { minimumFractionDigits: 2 },
@@ -120,20 +109,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// FUNCIÓN PARA ACTUALIZAR EL GRÁFICO
 function actualizarGrafico(registros) {
   const ctx = document.getElementById("graficoGanancias").getContext("2d");
-
-  // Agrupar ganancias por mes
   const gananciasPorMes = {};
+
   registros.forEach((reg) => {
-    // Extraer mes y año de la fecha (asumiendo formato local o timestamp)
     const fecha = new Date(reg.timestamp);
     const mesAnio = fecha.toLocaleString("es-ES", {
       month: "short",
       year: "2-digit",
     });
-
     gananciasPorMes[mesAnio] = (gananciasPorMes[mesAnio] || 0) + reg.ganancia;
   });
 
@@ -162,30 +147,20 @@ function actualizarGrafico(registros) {
         y: { beginAtZero: true, grid: { color: "#233554" } },
         x: { grid: { display: false } },
       },
-      plugins: {
-        legend: { display: false },
-      },
+      plugins: { legend: { display: false } },
     },
   });
 }
-//
 
-// --- LÓGICA DE FIREBASE ---
-
-const btnRegistrar = document.getElementById("btn-registrar");
-
+// LÓGICA DE FIREBASE (onSnapshot actualizado)
 onSnapshot(query(colRef, orderBy("timestamp", "desc")), (snapshot) => {
-  //
   const registros = [];
-  //
   const listaRegistrosUI = document.getElementById("lista-registros");
   listaRegistrosUI.innerHTML = "";
 
   snapshot.docs.forEach((docSnap) => {
     const reg = docSnap.data();
-    //
     registros.push(reg);
-    //
     const colorGanancia = reg.ganancia >= 0 ? "#2ecc71" : "#e74c3c";
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -202,6 +177,9 @@ onSnapshot(query(colRef, orderBy("timestamp", "desc")), (snapshot) => {
     listaRegistrosUI.appendChild(tr);
   });
 
+  // Llamamos al gráfico con los datos actuales de la base de datos
+  actualizarGrafico(registros);
+
   document.querySelectorAll(".btn-del").forEach((btn) => {
     btn.onclick = async () => {
       if (confirm("¿Eliminar registro?")) {
@@ -213,8 +191,7 @@ onSnapshot(query(colRef, orderBy("timestamp", "desc")), (snapshot) => {
   });
 });
 
-actualizarGrafico(registros);
-
+const btnRegistrar = document.getElementById("btn-registrar");
 btnRegistrar.addEventListener("click", async () => {
   const montoUSD = parseFloat(document.getElementById("montoUSD").value) || 0;
   const tasaMayor50 =
