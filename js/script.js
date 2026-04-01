@@ -1,3 +1,27 @@
+// 1. Importaciones (Ya configuradas para funcionar en el navegador)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { 
+    getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// 2. PEGA AQUÍ TU CONFIGURACIÓN (La que ves en tu imagen)
+const firebaseConfig = {
+    apiKey: "AIzaSyCrEYcnNbWLgVShx6v5GmeU3eddCGTQ1xU",
+    authDomain: "dolares-aa1fa.firebaseapp.com",
+    projectId: "dolares-aa1fa",
+    storageBucket: "dolares-aa1fa.firebasestorage.app",
+    messagingSenderId: "383367321854",
+    appId: "1:383367321854:web:924a893f685f21b6feadaf",
+    measurementId: "G-L8CPLQSREN"
+};
+
+// 3. Inicializar Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const registrosRef = collection(db, "registros");
+
+// ... (Aquí sigue el resto del código que te pasé antes con los botones y las tablas)
+
 document.addEventListener("DOMContentLoaded", () => {
   const fields = {
     tasaBCV: document.getElementById("tasaBCV"),
