@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tasaPromedioDisp.value = promedio.toFixed(4);
 
     if (promedio > 0) {
-      const diferenciaPct = (Math.abs(usdt - bcv) / promedio) * 100;
+      const diferenciaPct = (Math.abs(usdt - bcv) / promedio);
       let estimada =
         diferenciaPct < 0.5
           ? promedio + (usdt - promedio) * f1
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tasaEstimadaDisp.value = estimada.toFixed(4);
     }
 
-    tasaMenor50Disp.value = mayor50 > 0 ? (mayor50 - 0.15).toFixed(2) : ""; // Ajustado a -0.15 según lógica común
+    tasaMenor50Disp.value = mayor50 > 0 ? (mayor50 - 15).toFixed(2) : ""; // Ajustado a -0.15 según lógica común
   };
 
   inputs.forEach((id) =>
