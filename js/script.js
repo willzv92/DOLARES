@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tasaPromedioDisp.value = promedio.toFixed(4);
 
     if (promedio > 0) {
-      const diferenciaPct = (Math.abs(usdt - bcv) / promedio);
+      const diferenciaPct = (Math.abs(usdt - bcv) / bcv);
       let estimada =
         diferenciaPct < 0.5
           ? promedio + (usdt - promedio) * f1
