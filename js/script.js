@@ -216,7 +216,7 @@ btnRegistrar.addEventListener("click", async () => {
 
   const tasaUsada = montoUSD >= 50 ? tasaMayor50 : tasaMenor50;
   const montoTotalBs = montoUSD * tasaUsada;
-  const montoUSDt = montoUSD * tasaZelle;
+  const montoUSDt = montoUSD / tasaZelle;
   const cambioUSDt = montoTotalBs / tasaBsUsdt;
   const gananciaUSDt = montoUSDt - cambioUSDt - comisionUsdt;
 
