@@ -107,6 +107,10 @@
               placeholder="0.00"
             />
           </div>
+          <div class="field auto">
+            <label>Brecha (%)</label>
+            <input type="text" id="brechaReal" readonly tabindex="-1" placeholder="0.00%" />
+          </div>
         </div>
         <button
           id="btn-registrar"
@@ -115,6 +119,15 @@
         >
           CREAR REGISTRO PERMANENTE
         </button>
+      </section>
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+      <section class="chart-section">
+        <h3>Ganancias Mensuales (USDt)</h3>
+        <div class="chart-container" style="position: relative; height:200px; width:100%">
+          <canvas id="graficoGanancias"></canvas>
+        </div>
       </section>
 
       <section class="history-section">

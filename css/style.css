@@ -21,14 +21,14 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 10px; /* Reducido para móviles */
+  padding: 10px;
 }
 
 .app-container {
   background-color: var(--azul-claro);
   width: 100%;
   max-width: 550px;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 15px;
   border: 1px solid var(--dorado);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -42,12 +42,12 @@ header {
 
 h1 {
   color: var(--dorado);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   text-transform: uppercase;
   letter-spacing: 2px;
 }
 
-/* Requerimiento: Sin flechas en los inputs */
+/* Sin flechas en los inputs */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -71,9 +71,9 @@ input[type="number"] {
 }
 
 label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--dorado-brillante);
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 input {
@@ -93,6 +93,12 @@ input:focus {
 .field.auto input {
   background: #0a192f;
   color: #8892b0;
+  font-weight: bold;
+}
+
+/* Estilo específico para el campo Brecha */
+#brechaReal {
+  color: var(--dorado-brillante);
 }
 
 .separator {
@@ -103,13 +109,9 @@ input:focus {
   margin: 10px 0;
 }
 
-.manual-tasa input {
-  border: 1px solid var(--dorado);
-}
-
 .main-button {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 15px;
   padding: 15px;
   background: var(--dorado);
   color: var(--azul-oscuro);
@@ -124,6 +126,7 @@ input:focus {
   background: var(--dorado-brillante);
 }
 
+/* Resumen de cálculo */
 .result-card {
   margin-top: 20px;
   padding: 15px;
@@ -136,27 +139,44 @@ input:focus {
   display: flex;
   justify-content: space-between;
   margin: 8px 0;
+  font-size: 0.9rem;
 }
 
 .total {
   border-top: 1px solid var(--dorado);
   padding-top: 10px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--dorado-brillante);
 }
 
-.gain-section h3,
+/* SECCIÓN DEL GRÁFICO */
+.chart-section {
+  margin: 25px 0;
+  background: rgba(10, 25, 47, 0.5);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(197, 160, 89, 0.2);
+}
+
+.chart-section h3 {
+  margin-bottom: 12px;
+  color: var(--dorado);
+  font-size: 1rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* SECCIÓN HISTORIAL Y TABLA */
 .history-section h3 {
   margin-top: 20px;
   font-size: 1.1rem;
+  color: var(--dorado);
 }
-
-/* --- MEJORAS PARA MÓVILES (RESPONSIVE) --- */
 
 .table-container {
   max-height: 350px;
   overflow-y: auto;
-  overflow-x: auto; /* Permite scroll horizontal en móviles */
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   border: 1px solid var(--dorado);
   border-radius: 8px;
@@ -164,7 +184,7 @@ input:focus {
   background: var(--azul-oscuro);
 }
 
-/* Scrollbar personalizado */
+/* Scrollbar */
 .table-container::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -178,7 +198,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.75rem;
-  min-width: 600px; /* Evita que la tabla se colapse en pantallas pequeñas */
+  min-width: 650px; /* Asegura espacio para todas las columnas */
 }
 
 th {
@@ -201,24 +221,25 @@ td {
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 6px 10px; /* Tamaño optimizado para touch */
+  padding: 6px 10px;
   cursor: pointer;
   font-weight: bold;
 }
 
-/* Media Query para teléfonos inteligentes */
+/* MEJORAS PARA DISPOSITIVOS MÓVILES */
 @media (max-width: 480px) {
   .app-container {
-    padding: 1.2rem;
+    padding: 1rem;
     margin: 5px;
+    border-radius: 10px;
   }
 
   h1 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .input-grid {
-    grid-template-columns: 1fr; /* Una sola columna en móvil */
+    grid-template-columns: 1fr; /* Apilado vertical */
     gap: 12px;
   }
 
@@ -227,15 +248,20 @@ td {
   }
 
   input {
-    font-size: 16px; /* Previene el auto-zoom en iOS */
+    font-size: 16px; /* Evita zoom molesto en móviles */
     padding: 12px;
   }
 
   .main-button {
-    padding: 18px; /* Botón más grande para dedos */
+    padding: 18px;
   }
 
   .res-row {
     font-size: 0.85rem;
+  }
+
+  /* Ajuste de sección de ganancias para que no se vea amontonado */
+  .gain-section .input-grid {
+    grid-template-columns: 1fr;
   }
 }

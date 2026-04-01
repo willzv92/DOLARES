@@ -26,6 +26,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const colRef = collection(db, "historial_cambios");
 
+let chartInstance = null; // Para destruir y recrear el gráfico sin errores
+
 document.addEventListener("DOMContentLoaded", () => {
   const inputs = [
     "tasaBCV",
@@ -43,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tasaEstimadaDisp = document.getElementById("tasaEstimada");
   const tasaMenor50Disp = document.getElementById("tasaMenor50");
   const btnCalcular = document.getElementById("btn-calcular"); // Corregido ID
+  const brechaDisp = document.getElementById("brechaReal"); // Nuevo campo para brecha
 
   const updateAutomatedFields = () => {
     const bcv = parseFloat(fields.tasaBCV.value) || 0;
@@ -55,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tasaPromedioDisp.value = promedio.toFixed(4);
 
     if (promedio > 0) {
-      const diferenciaPct = (Math.abs(usdt - bcv) / bcv);
+      const diferenciaPct = Math.abs(usdt - bcv) / bcv;
       let estimada =
         diferenciaPct < 0.5
           ? promedio + (usdt - promedio) * f1
@@ -81,12 +84,28 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // CÁLCULO DE BRECHA
+    if (bcv > 0) {
+      const brechaVal = (Math.abs(usdt - bcv) / bcv) * 100;
+      brechaDisp.value = brechaVal.toFixed(2) + "%";
+    } else {
+      brechaDisp.value = "0.00%";
+    }
+
     const tasaFinal = montoUSD >= 50 ? mayor50 : menor50;
     const montoBs = montoUSD * tasaFinal;
     const comisionBs = montoBs * (comisionPct / 100);
     const totalBs = montoBs + comisionBs;
 
     // Actualizar IDs según tu HTML (outMontoBs, etc)
+    // Añadir escucha de brecha a los inputs bcv y usdt
+    document
+      .getElementById("tasaBCV")
+      .addEventListener("input", updateAutomatedFields);
+    document
+      .getElementById("tasaUSDt")
+      .addEventListener("input", updateAutomatedFields);
+    // Mostrar resultados formateados
     document.getElementById("outMontoBs").innerText = montoBs.toLocaleString(
       "es-VE",
       { minimumFractionDigits: 2 },
@@ -101,16 +120,72 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// FUNCIÓN PARA ACTUALIZAR EL GRÁFICO
+function actualizarGrafico(registros) {
+  const ctx = document.getElementById("graficoGanancias").getContext("2d");
+
+  // Agrupar ganancias por mes
+  const gananciasPorMes = {};
+  registros.forEach((reg) => {
+    // Extraer mes y año de la fecha (asumiendo formato local o timestamp)
+    const fecha = new Date(reg.timestamp);
+    const mesAnio = fecha.toLocaleString("es-ES", {
+      month: "short",
+      year: "2-digit",
+    });
+
+    gananciasPorMes[mesAnio] = (gananciasPorMes[mesAnio] || 0) + reg.ganancia;
+  });
+
+  const etiquetas = Object.keys(gananciasPorMes).reverse();
+  const datos = Object.values(gananciasPorMes).reverse();
+
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: etiquetas,
+      datasets: [
+        {
+          label: "Ganancia USDt",
+          data: datos,
+          backgroundColor: "#c5a059",
+          borderRadius: 5,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true, grid: { color: "#233554" } },
+        x: { grid: { display: false } },
+      },
+      plugins: {
+        legend: { display: false },
+      },
+    },
+  });
+}
+//
+
 // --- LÓGICA DE FIREBASE ---
 
 const btnRegistrar = document.getElementById("btn-registrar");
 
 onSnapshot(query(colRef, orderBy("timestamp", "desc")), (snapshot) => {
+  //
+  const registros = [];
+  //
   const listaRegistrosUI = document.getElementById("lista-registros");
   listaRegistrosUI.innerHTML = "";
 
   snapshot.docs.forEach((docSnap) => {
     const reg = docSnap.data();
+    //
+    registros.push(reg);
+    //
     const colorGanancia = reg.ganancia >= 0 ? "#2ecc71" : "#e74c3c";
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -137,6 +212,8 @@ onSnapshot(query(colRef, orderBy("timestamp", "desc")), (snapshot) => {
     };
   });
 });
+
+actualizarGrafico(registros);
 
 btnRegistrar.addEventListener("click", async () => {
   const montoUSD = parseFloat(document.getElementById("montoUSD").value) || 0;
