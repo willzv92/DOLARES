@@ -1,4 +1,5 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+// Importamos las funciones necesarias de la versión 12.11.0 (tu CDN)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -8,10 +9,9 @@ import {
   orderBy,
   deleteDoc,
   doc,
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// --- CONFIGURACIÓN DE FIREBASE ---
-// Reemplaza estos valores con los de tu consola de Firebase
+// --- CONFIGURACIÓN DE FIREBASE (Tus credenciales proporcionadas) ---
 const firebaseConfig = {
   apiKey: "AIzaSyCrEYcnNbWLgVShx6v5GmeU3eddCGTQ1xU",
   authDomain: "dolares-aa1fa.firebaseapp.com",
@@ -19,6 +19,7 @@ const firebaseConfig = {
   storageBucket: "dolares-aa1fa.firebasestorage.app",
   messagingSenderId: "383367321854",
   appId: "1:383367321854:web:924a893f685f21b6feadaf",
+  measurementId: "G-L8CPLQSREN",
 };
 
 const app = initializeApp(firebaseConfig);
