@@ -80,8 +80,17 @@ function exportarInforme() {
     showToast("No hay registros para exportar", "error");
     return;
   }
-  const generado = exportarInformePDF(registrosCache);
-  if (generado) showToast("Informe PDF generado");
+  try {
+    const generado = exportarInformePDF(registrosCache);
+    if (generado) {
+      showToast("Informe PDF generado");
+    } else {
+      showToast("No se pudo generar el PDF. Revisá la consola (F12).", "error");
+    }
+  } catch (error) {
+    console.error("Error al generar PDF:", error);
+    showToast("Error al generar el PDF: " + error.message, "error");
+  }
 }
 
 async function cerrarAnio() {

@@ -12,7 +12,16 @@ function fmtFecha(fecha) {
 }
 
 export function exportarInformePDF(registros) {
-  if (!registros.length || typeof jspdf === "undefined") return false;
+  if (!registros.length) return false;
+
+  if (typeof jspdf === "undefined") {
+    console.error("jsPDF no está cargado (revisar CDN en index.html)");
+    return false;
+  }
+  if (typeof jspdf.jsPDF.prototype.autoTable !== "function") {
+    console.error("AutoTable no está cargado (revisar CDN en index.html)");
+    return false;
+  }
 
   const { jsPDF } = jspdf;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
