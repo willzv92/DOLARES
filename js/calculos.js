@@ -30,10 +30,18 @@ export function calcularResumenBs(montoUSD, tasa, comisionPct) {
   return { montoBs, comisionBs, totalBs };
 }
 
-export function calcularOperacion({ montoUSD, tasaUsada, tasaZelle, tasaBsUsdt, comisionUsdt }) {
+export function calcularOperacion({
+  montoUSD,
+  tasaUsada,
+  tasaZelle,
+  tasaBsUsdt,
+  comisionUsdt,
+  comisionPct,
+}) {
   const totalBs = montoUSD * tasaUsada;
+  const comisionBs = totalBs * (comisionPct / 100);
   const montoUsdt = montoUSD / tasaZelle;
-  const cambioUsdt = totalBs / tasaBsUsdt;
+  const cambioUsdt = (totalBs + comisionBs) / tasaBsUsdt;
   const ganancia = montoUsdt - cambioUsdt - comisionUsdt;
   const pct = montoUsdt !== 0 ? (ganancia / montoUsdt) * 100 : 0;
   return { totalBs, montoUsdt, cambioUsdt, ganancia, pct };

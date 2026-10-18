@@ -204,6 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tasaZelle = parseFloat(document.getElementById("tasaZelle").value) || 0;
     const tasaBsUsdt = parseFloat(document.getElementById("tasaBsUsdt").value) || 0;
     const comisionUsdt = parseFloat(document.getElementById("comisionUsdt").value) || 0;
+    const comisionPct = parseFloat(fields.comisionPct.value) || 0;
 
     if (montoUSD <= 0) {
       showToast("Ingrese el Monto $", "error");
@@ -230,6 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tasaZelle,
       tasaBsUsdt,
       comisionUsdt,
+      comisionPct,
     });
 
     try {
