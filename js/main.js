@@ -75,21 +75,21 @@ function buildRow(reg, id) {
   return tr;
 }
 
-function exportarInforme() {
+async function exportarInforme() {
+  const btnExport = document.getElementById("btn-export");
   if (!registrosCache.length) {
     showToast("No hay registros para exportar", "error");
     return;
   }
+  btnExport.disabled = true;
   try {
-    const generado = exportarInformePDF(registrosCache);
-    if (generado) {
-      showToast("Informe PDF generado");
-    } else {
-      showToast("No se pudo generar el PDF. Revisá la consola (F12).", "error");
-    }
+    await exportarInformePDF(registrosCache);
+    showToast("Informe PDF generado");
   } catch (error) {
     console.error("Error al generar PDF:", error);
-    showToast("Error al generar el PDF: " + error.message, "error");
+    showToast("No se pudo generar el PDF: " + error.message, "error");
+  } finally {
+    btnExport.disabled = false;
   }
 }
 
@@ -108,12 +108,16 @@ async function cerrarAnio() {
   if (!confirmado) return;
 
   // Si el informe no se pudo generar, no se borra nada
-  if (!exportarInformePDF(registrosCache)) {
-    showToast("No se pudo generar el informe PDF. No se borró nada.", "error");
+  btnCerrar.disabled = true;
+  try {
+    await exportarInformePDF(registrosCache);
+  } catch (error) {
+    console.error("Error al generar el informe:", error);
+    showToast("No se pudo generar el informe PDF. No se borró nada. " + error.message, "error");
+    btnCerrar.disabled = false;
     return;
   }
 
-  btnCerrar.disabled = true;
   try {
     const idList = Array.from(
       document.querySelectorAll("#lista-registros .btn-del"),

@@ -1,3 +1,5 @@
+import { ensurePdfLibs } from "./pdfLibs.js";
+
 const AZUL_OSCURO = [10, 25, 47];
 const DORADO = [197, 160, 89];
 const DORADO_CLARO = [243, 207, 122];
@@ -11,21 +13,16 @@ function fmtFecha(fecha) {
   });
 }
 
-export function exportarInformePDF(registros) {
-  if (!registros.length) return false;
-
-  if (typeof jspdf === "undefined" || typeof jspdf.jsPDF === "undefined") {
-    console.error("jsPDF no está cargado (revisar CDN en index.html)");
-    return false;
-  }
-  if (typeof jspdf.jsPDF.API.autoTable !== "function") {
-    console.error(
-      "AutoTable no se registró en jsPDF.API (revisar CDN de jspdf-autotable en index.html)",
-    );
-    return false;
+export async function exportarInformePDF(registros) {
+  if (!registros.length) {
+    throw new Error("No hay registros para exportar");
   }
 
-  const { jsPDF } = jspdf;
+  // jsPDF + AutoTable: se descargan ahora, en orden y con espejos de CDN.
+  // Si falla, pdfLibs ya dejó el detalle (URL, motivo) en la consola.
+  await ensurePdfLibs();
+
+  const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const anchoPagina = doc.internal.pageSize.getWidth();
   const altoPagina = doc.internal.pageSize.getHeight();
