@@ -1,17 +1,10 @@
 import { ensurePdfLibs } from "./pdfLibs.js";
+import { fechaLegible, formatearSoloFecha } from "./fechas.js";
 
 const AZUL_OSCURO = [10, 25, 47];
 const DORADO = [197, 160, 89];
 const DORADO_CLARO = [243, 207, 122];
 const TEXTO_CLARO = [230, 241, 255];
-
-function fmtFecha(fecha) {
-  return fecha.toLocaleDateString("es-VE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
 
 export async function exportarInformePDF(registros) {
   if (!registros.length) {
@@ -42,11 +35,19 @@ export async function exportarInformePDF(registros) {
   doc.setTextColor(...TEXTO_CLARO);
   doc.setFont(undefined, "normal");
   doc.setFontSize(9);
-  const fechas = registros.map((r) => new Date(r.timestamp));
-  const primera = fmtFecha(new Date(Math.min(...fechas)));
-  const ultima = fmtFecha(new Date(Math.max(...fechas)));
+  // Periodo del informe: recorrido simple, sin depender de que todos tengan timestamp
+  let primeraMs = Infinity;
+  let ultimaMs = -Infinity;
+  for (const reg of registros) {
+    const ms = Number(reg.timestamp);
+    if (!Number.isFinite(ms)) continue;
+    if (ms < primeraMs) primeraMs = ms;
+    if (ms > ultimaMs) ultimaMs = ms;
+  }
+  const primera = Number.isFinite(primeraMs) ? formatearSoloFecha(primeraMs) : "—";
+  const ultima = Number.isFinite(ultimaMs) ? formatearSoloFecha(ultimaMs) : "—";
   doc.text(`Periodo: ${primera} - ${ultima}`, 14, 23);
-  doc.text(`Generado: ${fmtFecha(new Date())}`, 14, 28);
+  doc.text(`Generado: ${formatearSoloFecha(Date.now())}`, 14, 28);
 
   // --- Gráfico capturado del canvas ---
   const canvas = document.getElementById("graficoGanancias");
@@ -73,7 +74,7 @@ export async function exportarInformePDF(registros) {
   yCursor += 2;
 
   const body = registros.map((r) => [
-    r.fecha,
+    fechaLegible(r),
     r.monto.toFixed(2),
     r.tasa.toFixed(2),
     r.totalBs.toLocaleString("es-VE", { minimumFractionDigits: 2 }),

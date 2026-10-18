@@ -19,6 +19,7 @@ import {
   calcularOperacion,
 } from "./calculos.js";
 import { PERSIST_FIELDS, restoreState, saveState, debounce } from "./storage.js";
+import { fechaLegible } from "./fechas.js";
 import { actualizarGrafico } from "./grafico.js";
 import { showToast } from "./toast.js";
 import { exportarInformePDF } from "./informe.js";
@@ -32,7 +33,7 @@ function buildRow(reg, id) {
   const colorGanancia = reg.ganancia >= 0 ? "#2ecc71" : "#e74c3c";
 
   [
-    reg.fecha,
+    fechaLegible(reg),
     reg.monto.toFixed(2),
     reg.tasa.toFixed(2),
     moneyFmt.format(reg.totalBs),
@@ -265,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       await addDoc(colRef, {
-        fecha: new Date().toLocaleString(),
+        // Solo el instante: la fecha legible se formatea al mostrar (js/fechas.js)
         timestamp: Date.now(),
         monto: montoUSD,
         tasa: tasaUsada,

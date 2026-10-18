@@ -1,4 +1,12 @@
+import { LOCALE_FECHAS } from "./fechas.js";
+
 let chartInstance = null;
+
+// Se construye una sola vez y con locale explícito, igual que en la tabla y el PDF
+const fmtMes = new Intl.DateTimeFormat(LOCALE_FECHAS, {
+  month: "short",
+  year: "2-digit",
+});
 
 export function actualizarGrafico(registros) {
   if (typeof Chart === "undefined") return;
@@ -7,12 +15,10 @@ export function actualizarGrafico(registros) {
 
   const gananciasPorMes = {};
   registros.forEach((reg) => {
-    const fecha = new Date(reg.timestamp);
-    const mesAnio = fecha.toLocaleString("es-ES", {
-      month: "short",
-      year: "2-digit",
-    });
-    gananciasPorMes[mesAnio] = (gananciasPorMes[mesAnio] || 0) + reg.ganancia;
+    const ms = Number(reg.timestamp);
+    if (!Number.isFinite(ms)) return; // registro sin fecha válida: no ensuciar el eje
+    const mesAnio = fmtMes.format(new Date(ms));
+    gananciasPorMes[mesAnio] = (gananciasPorMes[mesAnio] || 0) + (reg.ganancia || 0);
   });
 
   const etiquetas = Object.keys(gananciasPorMes).reverse();
