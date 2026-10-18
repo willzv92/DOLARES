@@ -14,12 +14,14 @@ function fmtFecha(fecha) {
 export function exportarInformePDF(registros) {
   if (!registros.length) return false;
 
-  if (typeof jspdf === "undefined") {
+  if (typeof jspdf === "undefined" || typeof jspdf.jsPDF === "undefined") {
     console.error("jsPDF no está cargado (revisar CDN en index.html)");
     return false;
   }
-  if (typeof jspdf.jsPDF.prototype.autoTable !== "function") {
-    console.error("AutoTable no está cargado (revisar CDN en index.html)");
+  if (typeof jspdf.jsPDF.API.autoTable !== "function") {
+    console.error(
+      "AutoTable no se registró en jsPDF.API (revisar CDN de jspdf-autotable en index.html)",
+    );
     return false;
   }
 
