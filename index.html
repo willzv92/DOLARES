@@ -121,8 +121,6 @@
         </button>
       </section>
 
-      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
       <section class="chart-section">
         <h3>Ganancias Mensuales (USDt)</h3>
         <div class="chart-container" style="position: relative; height:200px; width:100%">
@@ -131,7 +129,10 @@
       </section>
 
       <section class="history-section">
-        <h3>Últimos Registros</h3>
+        <div class="history-header">
+          <h3>Últimos Registros</h3>
+          <button id="btn-export" class="btn-export">Exportar CSV</button>
+        </div>
         <div class="table-container">
           <table id="tabla-registros">
             <thead>
@@ -144,7 +145,7 @@
                 <th>Cambio USDt</th>
                 <th>Ganancia</th>
                 <th>%</th>
-                <th>Acción</th> </tr>
+                <th>Acción</th>
               </tr>
             </thead>
             <tbody id="lista-registros"></tbody>
@@ -153,6 +154,7 @@
       </section>
     </div>
 
-    <script type="module" src="js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>
