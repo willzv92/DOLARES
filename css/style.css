@@ -225,12 +225,19 @@ td {
   font-weight: bold;
 }
 
-/* Encabezado del historial + botón exportar */
+/* Encabezado del historial + botones de acción */
 .history-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 20px;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .btn-export {
@@ -247,6 +254,21 @@ td {
 .btn-export:hover {
   background: var(--dorado);
   color: var(--azul-oscuro);
+}
+
+.btn-danger {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.btn-danger:hover {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* TOASTS (esquina inferior derecha) */

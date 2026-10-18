@@ -8,6 +8,7 @@ import {
   orderBy,
   deleteDoc,
   doc,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -24,4 +25,4 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const colRef = collection(db, "historial_cambios");
 
-export { db, colRef, addDoc, onSnapshot, query, orderBy, deleteDoc, doc };
+export { db, colRef, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, writeBatch };

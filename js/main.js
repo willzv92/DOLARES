@@ -7,6 +7,7 @@ import {
   orderBy,
   deleteDoc,
   doc,
+  writeBatch,
 } from "./firebase.js";
 import {
   calcularBrecha,
@@ -20,6 +21,7 @@ import {
 import { PERSIST_FIELDS, restoreState, saveState, debounce } from "./storage.js";
 import { actualizarGrafico } from "./grafico.js";
 import { showToast } from "./toast.js";
+import { exportarInformePDF } from "./informe.js";
 
 const moneyFmt = new Intl.NumberFormat("es-VE", { minimumFractionDigits: 2 });
 
@@ -73,42 +75,55 @@ function buildRow(reg, id) {
   return tr;
 }
 
-function exportarCSV() {
+function exportarInforme() {
   if (!registrosCache.length) {
     showToast("No hay registros para exportar", "error");
     return;
   }
-  const headers = [
-    "Fecha",
-    "Monto $",
-    "Tasa",
-    "Total Bs",
-    "Monto USDt",
-    "Cambio USDt",
-    "Ganancia",
-    "%",
-  ];
-  const rows = registrosCache.map((r) => [
-    r.fecha,
-    r.monto,
-    r.tasa,
-    r.totalBs,
-    r.montoUsdt,
-    r.cambioUsdt,
-    r.ganancia,
-    r.pct,
-  ]);
-  const csv = [headers, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `dolares_historial_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast("Historial exportado a CSV");
+  const generado = exportarInformePDF(registrosCache);
+  if (generado) showToast("Informe PDF generado");
+}
+
+async function cerrarAnio() {
+  const btnCerrar = document.getElementById("btn-cerrar-anio");
+  const total = registrosCache.length;
+
+  if (!total) {
+    showToast("No hay registros para cerrar", "error");
+    return;
+  }
+
+  const confirmado = confirm(
+    `Se exportará y eliminarán ${total} registros del historial. El año quedará en 0. ¿Continuar?`,
+  );
+  if (!confirmado) return;
+
+  // Si el informe no se pudo generar, no se borra nada
+  if (!exportarInformePDF(registrosCache)) {
+    showToast("No se pudo generar el informe PDF. No se borró nada.", "error");
+    return;
+  }
+
+  btnCerrar.disabled = true;
+  try {
+    const idList = Array.from(
+      document.querySelectorAll("#lista-registros .btn-del"),
+    ).map((b) => b.getAttribute("data-id"));
+
+    const CHUNK = 500;
+    for (let i = 0; i < idList.length; i += CHUNK) {
+      const lote = idList.slice(i, i + CHUNK);
+      const batch = writeBatch(db);
+      lote.forEach((id) => batch.delete(doc(db, "historial_cambios", id)));
+      await batch.commit();
+    }
+
+    showToast("Año cerrado. Historial reiniciado.");
+  } catch (error) {
+    showToast("Error al cerrar el año: " + error.message, "error");
+  } finally {
+    btnCerrar.disabled = false;
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -194,7 +209,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("result-card").style.display = "block";
   });
 
-  document.getElementById("btn-export").addEventListener("click", exportarCSV);
+  document.getElementById("btn-export").addEventListener("click", exportarInforme);
+  document.getElementById("btn-cerrar-anio").addEventListener("click", cerrarAnio);
 
   const btnRegistrar = document.getElementById("btn-registrar");
   btnRegistrar.addEventListener("click", async () => {

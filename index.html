@@ -131,7 +131,10 @@
       <section class="history-section">
         <div class="history-header">
           <h3>Últimos Registros</h3>
-          <button id="btn-export" class="btn-export">Exportar CSV</button>
+          <div class="history-actions">
+            <button id="btn-export" class="btn-export">Exportar informe (PDF)</button>
+            <button id="btn-cerrar-anio" class="btn-export btn-danger">Cerrar año</button>
+          </div>
         </div>
         <div class="table-container">
           <table id="tabla-registros">
@@ -155,6 +158,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.5/jspdf.plugin.autotable.min.js" defer></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>
